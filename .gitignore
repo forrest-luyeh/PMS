@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.env
+
+# Database
+backend/*.db
+backend/*.db-shm
+backend/*.db-wal
+
+# Test results
+test-results/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Playwright
+frontend/test-results/
+frontend/playwright-report/
+
+# Claude Code internal
+.claude/
+.playwright-mcp/
+
+# OS
+.DS_Store
+Thumbs.db

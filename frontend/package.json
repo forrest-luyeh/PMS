@@ -1,0 +1,45 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "demo": "cross-env DEMO_DELAY=800 DEMO_STEP_DELAY=1200 playwright test --workers=1",
+    "demo:slow": "cross-env DEMO_DELAY=1500 DEMO_STEP_DELAY=2000 playwright test --workers=1",
+    "demo:01": "cross-env DEMO_DELAY=800 DEMO_STEP_DELAY=1200 DEMO_SUITE=01 playwright test --workers=1",
+    "demo:02": "cross-env DEMO_DELAY=800 DEMO_STEP_DELAY=1200 DEMO_SUITE=02 playwright test --workers=1"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@tanstack/react-query": "^5.95.2",
+    "axios": "^1.13.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-hook-form": "^7.72.0",
+    "react-router-dom": "^7.13.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.58.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.4.27",
+    "cross-env": "^10.1.0",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^3.4.19",
+    "vite": "^8.0.1"
+  }
+}
