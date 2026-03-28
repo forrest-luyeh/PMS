@@ -18,6 +18,9 @@ class UserCreate(BaseModel):
     password: str
     name: str
     role: UserRole = UserRole.FRONT_DESK
+    hotel_id: Optional[int] = None
+    brand_id: Optional[int] = None
+    tenant_id: Optional[int] = None
 
 
 class UserUpdate(BaseModel):
@@ -33,4 +36,7 @@ class UserResponse(BaseModel):
     name: str
     role: UserRole
     is_active: bool
+    hotel_id: Optional[int] = None
+    brand_id: Optional[int] = None
+    tenant_id: Optional[int] = None
     model_config = {"from_attributes": True}

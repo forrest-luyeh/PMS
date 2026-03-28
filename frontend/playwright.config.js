@@ -6,6 +6,8 @@ const slowMo = parseInt(process.env.DEMO_DELAY ?? '0', 10)
 const suite = process.env.DEMO_SUITE ?? 'all'
 const testMatch = suite === '01' ? '**/01-*.spec.js'
                 : suite === '02' ? '**/02-*.spec.js'
+                : suite === '03' ? '**/03-*.spec.js'
+                : suite === '04' ? '**/04-*.spec.js'
                 : '**/*.spec.js'
 
 export default defineConfig({
@@ -14,7 +16,7 @@ export default defineConfig({
   timeout: slowMo > 0 ? 120000 : 30000,   // demo 模式給更長 timeout
   retries: 0,
   use: {
-    baseURL: 'http://localhost:5177',
+    baseURL: process.env.BASE_URL ?? 'http://localhost:5910',
     headless: false,
     slowMo,                                  // 每個 browser action 間隔 ms
     viewport: { width: 1280, height: 800 },

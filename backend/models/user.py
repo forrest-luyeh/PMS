@@ -5,6 +5,9 @@ from database import Base
 
 
 class UserRole(str, enum.Enum):
+    SUPER_ADMIN = "SUPER_ADMIN"
+    TENANT_ADMIN = "TENANT_ADMIN"
+    BRAND_ADMIN = "BRAND_ADMIN"
     ADMIN = "ADMIN"
     FRONT_DESK = "FRONT_DESK"
     HOUSEKEEPING = "HOUSEKEEPING"
@@ -19,6 +22,9 @@ class User(Base):
     name = Column(String, nullable=False)
     role = Column(SAEnum(UserRole), nullable=False, default=UserRole.FRONT_DESK)
     is_active = Column(Boolean, default=True)
+    hotel_id = Column(Integer, nullable=True)   # NULL = SUPER_ADMIN / TENANT_ADMIN / BRAND_ADMIN
+    brand_id = Column(Integer, nullable=True)
+    tenant_id = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 

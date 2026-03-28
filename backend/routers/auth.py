@@ -16,7 +16,8 @@ def login(body: LoginRequest, response: Response, db: Session = Depends(get_db))
     user = db.query(User).filter_by(email=body.email).first()
     if not user or not verify_password(body.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    at = create_access_token(str(user.id), user.role.value)
+    at = create_access_token(str(user.id), user.role.value,
+                             hotel_id=user.hotel_id, brand_id=user.brand_id, tenant_id=user.tenant_id)
     rt, exp = create_refresh_token(str(user.id))
     response.set_cookie(key=REFRESH_COOKIE, value=rt, httponly=True, samesite="lax", expires=exp)
     return TokenResponse(access_token=at)
@@ -39,7 +40,8 @@ def refresh(response: Response, refresh_token: str = Cookie(None, alias=REFRESH_
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     db.add(RefreshTokenBlacklist(token=refresh_token, expires_at=datetime.fromtimestamp(payload["exp"], tz=timezone.utc)))
-    new_at = create_access_token(str(user.id), user.role.value)
+    new_at = create_access_token(str(user.id), user.role.value,
+                                 hotel_id=user.hotel_id, brand_id=user.brand_id, tenant_id=user.tenant_id)
     new_rt, exp = create_refresh_token(str(user.id))
     response.set_cookie(key=REFRESH_COOKIE, value=new_rt, httponly=True, samesite="lax", expires=exp)
     db.commit()
@@ -66,15 +68,30 @@ def me(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/users", response_model=list[UserResponse])
-def list_users(db: Session = Depends(get_db), _=Depends(require_role("ADMIN"))):
-    return db.query(User).all()
+def list_users(db: Session = Depends(get_db), current_user: User = Depends(require_role("ADMIN", "TENANT_ADMIN", "BRAND_ADMIN"))):
+    q = db.query(User)
+    if current_user.role.value == "TENANT_ADMIN":
+        hotel_id = getattr(current_user, "_token_hotel_id", None) or current_user.hotel_id
+        q = q.filter_by(hotel_id=hotel_id)
+    elif current_user.role.value == "BRAND_ADMIN":
+        q = q.filter_by(brand_id=current_user.brand_id)
+    return q.all()
 
 
 @router.post("/users", response_model=UserResponse, status_code=201)
-def create_user(body: UserCreate, db: Session = Depends(get_db), _=Depends(require_role("ADMIN"))):
+def create_user(body: UserCreate, db: Session = Depends(get_db), current_user: User = Depends(require_role("ADMIN", "TENANT_ADMIN", "BRAND_ADMIN"))):
     if db.query(User).filter_by(email=body.email).first():
         raise HTTPException(status_code=409, detail="Email already registered")
-    user = User(email=body.email, hashed_password=hash_password(body.password), name=body.name, role=body.role)
+    hotel_id = getattr(current_user, "_token_hotel_id", None) or current_user.hotel_id
+    user = User(
+        email=body.email,
+        hashed_password=hash_password(body.password),
+        name=body.name,
+        role=body.role,
+        hotel_id=hotel_id,
+        brand_id=current_user.brand_id,
+        tenant_id=current_user.tenant_id,
+    )
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -82,10 +99,14 @@ def create_user(body: UserCreate, db: Session = Depends(get_db), _=Depends(requi
 
 
 @router.put("/users/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, body: UserUpdate, db: Session = Depends(get_db), _=Depends(require_role("ADMIN"))):
+def update_user(user_id: int, body: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(require_role("ADMIN", "TENANT_ADMIN", "BRAND_ADMIN"))):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if current_user.role.value == "TENANT_ADMIN":
+        hotel_id = getattr(current_user, "_token_hotel_id", None) or current_user.hotel_id
+        if user.hotel_id != hotel_id:
+            raise HTTPException(status_code=403, detail="Cannot modify user from another hotel")
     for k, v in body.model_dump(exclude_none=True).items():
         if k == "password":
             user.hashed_password = hash_password(v)

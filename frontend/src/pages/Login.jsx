@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('admin@example.com')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('admin@checkinn.com.tw')
+  const [password, setPassword] = useState('Admin1234!')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -41,6 +41,9 @@ export default function Login() {
             {loading ? '登入中...' : '登入'}
           </button>
         </form>
+        <p className="text-center text-xs text-gray-400 mt-4">
+          還沒有帳號？ <Link to="/register" className="text-slate-600 underline">立即註冊旅館</Link>
+        </p>
       </div>
     </div>
   )

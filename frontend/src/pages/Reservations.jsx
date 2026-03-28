@@ -139,7 +139,7 @@ function CreateReservationModal({ onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const { data: guests = [] } = useQuery({ queryKey: ['guests-list'], queryFn: () => api.get('/guests').then(r => r.data.items ?? r.data) })
+  const { data: guests = [] } = useQuery({ queryKey: ['guests-list'], queryFn: () => api.get('/guests', { params: { limit: 1000 } }).then(r => r.data.items ?? r.data) })
   const { data: roomTypes = [] } = useQuery({ queryKey: ['room-types'], queryFn: () => api.get('/room-types').then(r => r.data) })
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))

@@ -20,6 +20,7 @@ class FolioItemType(str, enum.Enum):
 class Folio(Base):
     __tablename__ = "folios"
     id = Column(Integer, primary_key=True, index=True)
+    hotel_id = Column(Integer, nullable=False, index=True)
     reservation_id = Column(Integer, ForeignKey("reservations.id"), nullable=False, unique=True)
     status = Column(SAEnum(FolioStatus), nullable=False, default=FolioStatus.OPEN)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

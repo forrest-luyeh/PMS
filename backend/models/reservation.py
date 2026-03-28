@@ -23,6 +23,7 @@ class ReservationSource(str, enum.Enum):
 class Reservation(Base):
     __tablename__ = "reservations"
     id = Column(Integer, primary_key=True, index=True)
+    hotel_id = Column(Integer, nullable=False, index=True)
     guest_id = Column(Integer, ForeignKey("guests.id"), nullable=False)
     room_type_id = Column(Integer, ForeignKey("room_types.id"), nullable=False)
     room_id = Column(Integer, ForeignKey("rooms.id"), nullable=True)

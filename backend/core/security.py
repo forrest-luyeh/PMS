@@ -14,9 +14,21 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_ctx.verify(plain, hashed)
 
 
-def create_access_token(subject: str, role: str) -> str:
+def create_access_token(
+    subject: str,
+    role: str,
+    hotel_id: int | None = None,
+    brand_id: int | None = None,
+    tenant_id: int | None = None,
+) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload = {"sub": subject, "role": role, "exp": expire, "type": "access"}
+    payload: dict = {"sub": subject, "role": role, "exp": expire, "type": "access"}
+    if hotel_id is not None:
+        payload["hotel_id"] = hotel_id
+    if brand_id is not None:
+        payload["brand_id"] = brand_id
+    if tenant_id is not None:
+        payload["tenant_id"] = tenant_id
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 

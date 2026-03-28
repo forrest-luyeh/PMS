@@ -1,8 +1,9 @@
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from core.deps import get_db, get_current_user
+from core.deps import get_db, get_current_user, get_hotel_context
 from models.folio import Folio, FolioItem, FolioStatus, FolioItemType
+from models.tenant import Hotel
 from schemas.folio import FolioItemCreate, FolioResponse, FolioItemResponse
 
 router = APIRouter(prefix="/folios", tags=["folios"])
@@ -29,15 +30,16 @@ def _build_folio_response(folio: Folio) -> FolioResponse:
 
 
 @router.get("/{folio_id}", response_model=FolioResponse)
-def get_folio(folio_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    folio = db.get(Folio, folio_id)
+def get_folio(folio_id: int, db: Session = Depends(get_db), hotel: Hotel = Depends(get_hotel_context)):
+    folio = db.query(Folio).filter_by(id=folio_id, hotel_id=hotel.id).first()
     if not folio: raise HTTPException(404, "Folio not found")
     return _build_folio_response(folio)
 
 
 @router.post("/{folio_id}/items", response_model=FolioResponse, status_code=201)
-def add_folio_item(folio_id: int, body: FolioItemCreate, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    folio = db.get(Folio, folio_id)
+def add_folio_item(folio_id: int, body: FolioItemCreate,
+                   db: Session = Depends(get_db), hotel: Hotel = Depends(get_hotel_context)):
+    folio = db.query(Folio).filter_by(id=folio_id, hotel_id=hotel.id).first()
     if not folio: raise HTTPException(404, "Folio not found")
     if folio.status == FolioStatus.CLOSED:
         raise HTTPException(400, "Cannot add items to a closed folio")
@@ -50,8 +52,9 @@ def add_folio_item(folio_id: int, body: FolioItemCreate, db: Session = Depends(g
 
 
 @router.delete("/{folio_id}/items/{item_id}", status_code=204)
-def delete_folio_item(folio_id: int, item_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    folio = db.get(Folio, folio_id)
+def delete_folio_item(folio_id: int, item_id: int,
+                      db: Session = Depends(get_db), hotel: Hotel = Depends(get_hotel_context)):
+    folio = db.query(Folio).filter_by(id=folio_id, hotel_id=hotel.id).first()
     if not folio: raise HTTPException(404, "Folio not found")
     if folio.status == FolioStatus.CLOSED:
         raise HTTPException(400, "Cannot modify a closed folio")

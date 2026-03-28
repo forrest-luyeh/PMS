@@ -1,32 +1,38 @@
 /**
- * 測試 1：主流程
+ * 測試 1：主流程（Multi-Tenant 版）
  *
- * 涵蓋核心住房作業路徑：
+ * 以 TENANT_ADMIN (admin@example.com) 身份，在預設集團 → 預設品牌 → 預設旅館
+ * 執行核心住房作業路徑：
  *   登入 → 新增訂房（使用既有客人）→ Check-in（指定房間）→ Check-out
  */
 
 import { test, expect } from '@playwright/test'
 import { login, today, daysAfter, navTo, step } from './helpers.js'
 
-test.describe('主流程：訂房 → Check-in → Check-out', () => {
+test.describe('主流程：訂房 → Check-in → Check-out（預設旅館）', () => {
 
-  test('1-1 管理員可以登入並看到儀表板', async ({ page }) => {
+  test('1-1 TENANT_ADMIN 可以登入並看到儀表板', async ({ page }) => {
     await page.goto('/login')
-    await expect(page.locator('#email')).toHaveValue('admin@example.com')
+    // Login.jsx 預設帳號為雀客集團管理員
+    await expect(page.locator('#email')).toHaveValue('admin@checkinn.com.tw')
 
-    await page.locator('#password').fill('admin1234')
+    await page.locator('#password').fill('Admin1234!')
     await step(page)
     await page.getByRole('button', { name: '登入' }).click()
 
     await page.waitForURL('/')
-    await expect(page.getByRole('heading', { name: '今日儀表板' })).toBeVisible()
+    // TENANT_ADMIN 看到集團總覽（三層儀表板層次 0）
+    await expect(page.getByRole('heading', { name: '集團總覽' })).toBeVisible()
     await expect(page.getByText('今日抵達').first()).toBeVisible()
   })
 
-  test('1-2 側邊欄導航列顯示所有管理員可用頁面', async ({ page }) => {
+  test('1-2 側邊欄顯示 TENANT_ADMIN 可用的所有頁面', async ({ page }) => {
     await login(page)
     await step(page)
-    for (const item of ['儀表板', '房態看板', '訂房管理', '客人管理', '房務看板', '用戶管理']) {
+    for (const item of [
+      '儀表板', '房態看板', '訂房管理', '客人管理',
+      '房務看板', '用戶管理', '旅館列表', '管理旗下旅館', '品牌管理',
+    ]) {
       await expect(page.getByRole('link', { name: item })).toBeVisible()
     }
   })
@@ -106,7 +112,7 @@ test.describe('主流程：訂房 → Check-in → Check-out', () => {
     }
   })
 
-  test('1-6 房態看板依樓層顯示房間色塊', async ({ page }) => {
+  test('1-6 房態看板依樓層顯示房間色塊（預設旅館）', async ({ page }) => {
     await login(page)
     await navTo(page, '房態看板', '/rooms')
     await step(page)

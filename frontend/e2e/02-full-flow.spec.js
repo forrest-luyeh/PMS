@@ -1,8 +1,9 @@
 /**
- * 測試 2：完整流程
+ * 測試 2：完整流程（Multi-Tenant 版）
  *
+ * 以 TENANT_ADMIN (admin@example.com) 身份，在預設集團 → 預設品牌 → 預設旅館
  * 端對端完整住房作業：
- *   登入 → 新增客人 → 新增訂房 → Check-in → 附加消費 → 折扣 → 收款 → Check-out → 房務清潔
+ *   登入 → 新增客人 → 新增訂房 → Check-in → 附加消費 → 折扣 → 收款 → Check-out → 房務清潔 → 用戶管理
  */
 
 import { test, expect } from '@playwright/test'
@@ -12,14 +13,14 @@ const SUFFIX = Date.now().toString().slice(-6)
 const GUEST_NAME = `測試客人 ${SUFFIX}`
 const GUEST_PHONE = `09${SUFFIX}`
 
-test.describe('完整流程：客人建立 → 住房全週期', () => {
+test.describe('完整流程：客人建立 → 住房全週期（預設旅館）', () => {
 
   test.beforeEach(async ({ page }) => {
     await login(page)
   })
 
   // ─── Step 1：新增客人 ──────────────────────────────────────────
-  test('2-1 新增客人', async ({ page }) => {
+  test('2-1 新增客人（歸屬預設旅館）', async ({ page }) => {
     await navTo(page, '客人管理', '/guests')
     await expect(page.getByRole('heading', { name: '客人管理' })).toBeVisible()
     await step(page)
@@ -27,16 +28,15 @@ test.describe('完整流程：客人建立 → 住房全週期', () => {
     await page.getByRole('button', { name: '+ 新增客人' }).click()
     await expect(page.getByRole('heading', { name: '新增客人' })).toBeVisible()
 
-    await page.locator('.fixed').locator('input').nth(0).fill(GUEST_NAME)   // 姓名
-    await page.locator('.fixed').locator('input').nth(2).fill(GUEST_PHONE)  // 電話
-    await page.locator('.fixed').locator('input').nth(3).fill(`test${SUFFIX}@example.com`) // email
-    await page.locator('.fixed').locator('input').nth(4).fill('台灣')        // 國籍
+    await page.locator('.fixed').locator('input').nth(0).fill(GUEST_NAME)
+    await page.locator('.fixed').locator('input').nth(2).fill(GUEST_PHONE)
+    await page.locator('.fixed').locator('input').nth(3).fill(`test${SUFFIX}@example.com`)
+    await page.locator('.fixed').locator('input').nth(4).fill('台灣')
     await step(page)
 
     await page.getByRole('button', { name: '儲存' }).click()
     await expect(page.getByRole('heading', { name: '新增客人' })).not.toBeVisible()
 
-    // 搜尋確認
     await page.locator('input[placeholder*="搜尋"]').fill(GUEST_NAME.slice(0, 5))
     await expect(page.locator(`td:has-text("${GUEST_NAME}")`)).toBeVisible()
   })
@@ -49,7 +49,6 @@ test.describe('完整流程：客人建立 → 住房全週期', () => {
     await page.getByRole('button', { name: '+ 新增訂房' }).click()
     await expect(page.getByRole('heading', { name: '新增訂房' })).toBeVisible()
 
-    // 等待客人選單載入（scoped to modal）
     const modal = page.locator('.fixed')
     const guestSelect = modal.locator('select').nth(0)
     const guestOption = guestSelect.locator(`option:has-text("${GUEST_NAME}")`)
@@ -57,11 +56,9 @@ test.describe('完整流程：客人建立 → 住房全週期', () => {
     const guestVal = await guestOption.getAttribute('value')
     await guestSelect.selectOption(guestVal)
 
-    // 選房型（第一種）
     await expect(modal.locator('select').nth(1).locator('option').nth(1)).toBeAttached({ timeout: 8000 })
     await modal.locator('select').nth(1).selectOption({ index: 1 })
 
-    // 日期：今天 ~ 2天後
     await modal.locator('input[type="date"]').nth(0).fill(today())
     await modal.locator('input[type="date"]').nth(1).fill(daysAfter(2))
     await step(page)
@@ -198,8 +195,8 @@ test.describe('完整流程：客人建立 → 住房全週期', () => {
     await expect(page.locator('text=標記清潔完成')).not.toBeVisible()
   })
 
-  // ─── Step 7：用戶管理 ─────────────────────────────────────────
-  test('2-7 Admin 新增並編輯系統用戶', async ({ page }) => {
+  // ─── Step 7：用戶管理（TENANT_ADMIN 管理同旅館用戶）────────────
+  test('2-7 TENANT_ADMIN 新增並編輯旅館用戶', async ({ page }) => {
     await navTo(page, '用戶管理', '/users')
     await expect(page.getByRole('heading', { name: '用戶管理' })).toBeVisible()
     await step(page)

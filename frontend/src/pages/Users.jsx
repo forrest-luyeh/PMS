@@ -26,7 +26,7 @@ export default function Users() {
     onSuccess: () => { qc.invalidateQueries(['users']); setModal(null) },
   })
 
-  if (me?.role !== 'ADMIN') return (
+  if (!['ADMIN', 'TENANT_ADMIN', 'BRAND_ADMIN'].includes(me?.role)) return (
     <div className="p-8 text-gray-500">僅限管理員存取</div>
   )
 

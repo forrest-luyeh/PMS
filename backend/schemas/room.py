@@ -4,11 +4,41 @@ from decimal import Decimal
 from models.room import RoomStatus
 
 
+class RoomTypeImageCreate(BaseModel):
+    url: str
+    alt_text: Optional[str] = None
+    sort_order: int = 0
+
+
+class RoomTypeImageResponse(BaseModel):
+    id: int
+    url: str
+    alt_text: Optional[str]
+    sort_order: int
+    model_config = {"from_attributes": True}
+
+
+class RoomTypeAmenityCreate(BaseModel):
+    name: str
+    category: Optional[str] = None
+
+
+class RoomTypeAmenityResponse(BaseModel):
+    id: int
+    name: str
+    category: Optional[str]
+    model_config = {"from_attributes": True}
+
+
 class RoomTypeCreate(BaseModel):
     name: str
     description: Optional[str] = None
     base_rate: Decimal
     max_occupancy: int = 2
+    room_code: Optional[str] = None
+    bed_type: Optional[str] = None
+    has_window: bool = True
+    size_sqm: Optional[Decimal] = None
 
 
 class RoomTypeUpdate(BaseModel):
@@ -16,6 +46,10 @@ class RoomTypeUpdate(BaseModel):
     description: Optional[str] = None
     base_rate: Optional[Decimal] = None
     max_occupancy: Optional[int] = None
+    room_code: Optional[str] = None
+    bed_type: Optional[str] = None
+    has_window: Optional[bool] = None
+    size_sqm: Optional[Decimal] = None
 
 
 class RoomTypeResponse(BaseModel):
@@ -24,6 +58,12 @@ class RoomTypeResponse(BaseModel):
     description: Optional[str]
     base_rate: Decimal
     max_occupancy: int
+    room_code: Optional[str] = None
+    bed_type: Optional[str] = None
+    has_window: Optional[bool] = None
+    size_sqm: Optional[Decimal] = None
+    images: List[RoomTypeImageResponse] = []
+    amenities: List[RoomTypeAmenityResponse] = []
     model_config = {"from_attributes": True}
 
 

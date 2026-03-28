@@ -2,10 +2,11 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from core.deps import get_db, get_current_user, require_role
+from core.deps import get_db, get_current_user, get_hotel_context
 from models.reservation import Reservation, ReservationStatus
 from models.room import Room, RoomStatus
 from models.folio import Folio, FolioItem, FolioStatus, FolioItemType
+from models.tenant import Hotel
 from schemas.reservation import (ReservationCreate, ReservationUpdate, ReservationResponse,
                                   ReservationDetailResponse, CheckInRequest, CheckOutRequest)
 
@@ -28,10 +29,10 @@ def _calc_balance(folio) -> Decimal:
 def list_reservations(
     page: int = 1, limit: int = 20,
     status: str = None, check_in_date: str = None, search: str = None,
-    db: Session = Depends(get_db), _=Depends(get_current_user)
+    db: Session = Depends(get_db), hotel: Hotel = Depends(get_hotel_context)
 ):
     from models.guest import Guest
-    q = db.query(Reservation)
+    q = db.query(Reservation).filter_by(hotel_id=hotel.id)
     if status:
         q = q.filter(Reservation.status == status)
     if check_in_date:
@@ -45,24 +46,26 @@ def list_reservations(
 
 
 @router.post("", response_model=ReservationResponse, status_code=201)
-def create_reservation(body: ReservationCreate, db: Session = Depends(get_db), _=Depends(get_current_user)):
+def create_reservation(body: ReservationCreate, db: Session = Depends(get_db),
+                       hotel: Hotel = Depends(get_hotel_context)):
     if body.check_out_date <= body.check_in_date:
         raise HTTPException(400, "check_out_date must be after check_in_date")
-    res = Reservation(**body.model_dump())
+    res = Reservation(**body.model_dump(), hotel_id=hotel.id)
     db.add(res); db.commit(); db.refresh(res)
     return res
 
 
 @router.get("/{res_id}", response_model=ReservationDetailResponse)
-def get_reservation(res_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    res = db.get(Reservation, res_id)
+def get_reservation(res_id: int, db: Session = Depends(get_db), hotel: Hotel = Depends(get_hotel_context)):
+    res = db.query(Reservation).filter_by(id=res_id, hotel_id=hotel.id).first()
     if not res: raise HTTPException(404, "Reservation not found")
     return ReservationDetailResponse.from_orm_with_folio(res)
 
 
 @router.put("/{res_id}", response_model=ReservationResponse)
-def update_reservation(res_id: int, body: ReservationUpdate, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    res = db.get(Reservation, res_id)
+def update_reservation(res_id: int, body: ReservationUpdate,
+                       db: Session = Depends(get_db), hotel: Hotel = Depends(get_hotel_context)):
+    res = db.query(Reservation).filter_by(id=res_id, hotel_id=hotel.id).first()
     if not res: raise HTTPException(404, "Reservation not found")
     if res.status != ReservationStatus.CONFIRMED:
         raise HTTPException(400, "Only CONFIRMED reservations can be modified")
@@ -73,8 +76,8 @@ def update_reservation(res_id: int, body: ReservationUpdate, db: Session = Depen
 
 
 @router.post("/{res_id}/cancel")
-def cancel_reservation(res_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    res = db.get(Reservation, res_id)
+def cancel_reservation(res_id: int, db: Session = Depends(get_db), hotel: Hotel = Depends(get_hotel_context)):
+    res = db.query(Reservation).filter_by(id=res_id, hotel_id=hotel.id).first()
     if not res: raise HTTPException(404, "Reservation not found")
     if res.status != ReservationStatus.CONFIRMED:
         raise HTTPException(400, "Only CONFIRMED reservations can be cancelled")
@@ -89,8 +92,8 @@ def cancel_reservation(res_id: int, db: Session = Depends(get_db), _=Depends(get
 
 
 @router.post("/{res_id}/no-show")
-def no_show(res_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    res = db.get(Reservation, res_id)
+def no_show(res_id: int, db: Session = Depends(get_db), hotel: Hotel = Depends(get_hotel_context)):
+    res = db.query(Reservation).filter_by(id=res_id, hotel_id=hotel.id).first()
     if not res: raise HTTPException(404, "Reservation not found")
     if res.status != ReservationStatus.CONFIRMED:
         raise HTTPException(400, "Only CONFIRMED reservations can be marked no-show")
@@ -105,13 +108,14 @@ def no_show(res_id: int, db: Session = Depends(get_db), _=Depends(get_current_us
 
 
 @router.post("/{res_id}/checkin")
-def checkin(res_id: int, body: CheckInRequest, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    res = db.get(Reservation, res_id)
+def checkin(res_id: int, body: CheckInRequest,
+            db: Session = Depends(get_db), hotel: Hotel = Depends(get_hotel_context)):
+    res = db.query(Reservation).filter_by(id=res_id, hotel_id=hotel.id).first()
     if not res: raise HTTPException(404, "Reservation not found")
     if res.status != ReservationStatus.CONFIRMED:
         raise HTTPException(400, "Only CONFIRMED reservations can be checked in")
 
-    room = db.get(Room, body.room_id)
+    room = db.query(Room).filter_by(id=body.room_id, hotel_id=hotel.id).first()
     if not room: raise HTTPException(404, "Room not found")
     if room.status != RoomStatus.AVAILABLE:
         raise HTTPException(409, f"Room is {room.status}, not AVAILABLE")
@@ -124,7 +128,7 @@ def checkin(res_id: int, body: CheckInRequest, db: Session = Depends(get_db), _=
     room.status = RoomStatus.OCCUPIED
 
     # Create folio
-    folio = Folio(reservation_id=res.id)
+    folio = Folio(reservation_id=res.id, hotel_id=hotel.id)
     db.add(folio); db.flush()
 
     # Auto-create ROOM_CHARGE items (one per night)
@@ -144,8 +148,9 @@ def checkin(res_id: int, body: CheckInRequest, db: Session = Depends(get_db), _=
 
 
 @router.post("/{res_id}/checkout")
-def checkout(res_id: int, body: CheckOutRequest, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    res = db.get(Reservation, res_id)
+def checkout(res_id: int, body: CheckOutRequest,
+             db: Session = Depends(get_db), hotel: Hotel = Depends(get_hotel_context)):
+    res = db.query(Reservation).filter_by(id=res_id, hotel_id=hotel.id).first()
     if not res: raise HTTPException(404, "Reservation not found")
     if res.status != ReservationStatus.CHECKED_IN:
         raise HTTPException(400, "Only CHECKED_IN reservations can be checked out")
