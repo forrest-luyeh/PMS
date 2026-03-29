@@ -21,6 +21,10 @@ const navItems = [
   { to: '/manage/hotels', label: '管理旗下旅館', roles: ['TENANT_ADMIN','BRAND_ADMIN'] },
   { to: '/manage/rooms',  label: '房型/房間設定', roles: ['TENANT_ADMIN','BRAND_ADMIN','ADMIN'] },
   { to: '/manage/brands', label: '品牌管理',     roles: ['TENANT_ADMIN'] },
+  { to: '/manage/posts',        label: '文章管理',       roles: ['TENANT_ADMIN','BRAND_ADMIN'] },
+  { to: '/manage/hero-slides',  label: '首頁輪播',       roles: ['TENANT_ADMIN','BRAND_ADMIN'] },
+  { to: '/manage/testimonials', label: '旅客評語',       roles: ['TENANT_ADMIN','BRAND_ADMIN'] },
+  { to: '/manage/settings',     label: '集團設定',       roles: ['TENANT_ADMIN'] },
 ]
 
 const HOTEL_MGMT_ROLES = ['TENANT_ADMIN', 'BRAND_ADMIN']

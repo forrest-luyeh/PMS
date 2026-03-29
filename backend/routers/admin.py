@@ -9,7 +9,8 @@ from schemas.tenant import (TenantCreate, TenantResponse, BrandCreate, BrandUpda
                              HotelCreate, HotelUpdate, HotelResponse, RegisterRequest,
                              TenantTree, BrandWithHotels, HotelBrief,
                              HotelImageCreate, HotelImageResponse,
-                             HotelAmenityCreate, HotelAmenityResponse)
+                             HotelAmenityCreate, HotelAmenityResponse,
+                             TenantSettingsUpdate, TenantSettingsResponse)
 from schemas.auth import TokenResponse
 
 router = APIRouter(tags=["admin"])
@@ -423,6 +424,41 @@ def aggregate_dashboard(
         "arrivals": [_fmt_res(r) for r in arrival_rows],
         "departures": [_fmt_res(r) for r in departure_rows],
     }
+
+
+# ---- Tenant Settings ----
+
+@router.get("/admin/tenant-settings", response_model=TenantSettingsResponse)
+def get_tenant_settings(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_role("SUPER_ADMIN", "TENANT_ADMIN")),
+):
+    tenant_id = current_user.tenant_id
+    if not tenant_id:
+        raise HTTPException(400, "No tenant context")
+    tenant = db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(404, "Tenant not found")
+    return tenant
+
+
+@router.put("/admin/tenant-settings", response_model=TenantSettingsResponse)
+def update_tenant_settings(
+    body: TenantSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_role("SUPER_ADMIN", "TENANT_ADMIN")),
+):
+    tenant_id = current_user.tenant_id
+    if not tenant_id:
+        raise HTTPException(400, "No tenant context")
+    tenant = db.get(Tenant, tenant_id)
+    if not tenant:
+        raise HTTPException(404, "Tenant not found")
+    for k, v in body.model_dump(exclude_none=True).items():
+        setattr(tenant, k, v)
+    db.commit()
+    db.refresh(tenant)
+    return tenant
 
 
 # ---- TENANT_ADMIN / BRAND_ADMIN: Switch hotel context ----

@@ -11,6 +11,10 @@ import SuperAdminDashboard from './pages/admin/Dashboard'
 import ManageHotels from './pages/manage/Hotels'
 import ManageBrands from './pages/manage/Brands'
 import RoomSetup from './pages/manage/RoomSetup'
+import ManagePosts from './pages/manage/Posts'
+import ManageTestimonials from './pages/manage/Testimonials'
+import ManageHeroSlides from './pages/manage/HeroSlides'
+import TenantSettings from './pages/manage/TenantSettings'
 import Dashboard from './pages/Dashboard'
 import Rooms from './pages/Rooms'
 import Reservations from './pages/Reservations'
@@ -43,6 +47,10 @@ export default function App() {
               <Route path="manage/hotels" element={<PrivateRoute roles={['TENANT_ADMIN','BRAND_ADMIN']}><ManageHotels /></PrivateRoute>} />
               <Route path="manage/brands" element={<PrivateRoute roles={['TENANT_ADMIN']}><ManageBrands /></PrivateRoute>} />
               <Route path="manage/rooms" element={<PrivateRoute roles={['TENANT_ADMIN','BRAND_ADMIN','ADMIN']}><RoomSetup /></PrivateRoute>} />
+              <Route path="manage/posts" element={<PrivateRoute roles={['TENANT_ADMIN','BRAND_ADMIN']}><ManagePosts /></PrivateRoute>} />
+              <Route path="manage/hero-slides" element={<PrivateRoute roles={['TENANT_ADMIN','BRAND_ADMIN']}><ManageHeroSlides /></PrivateRoute>} />
+              <Route path="manage/testimonials" element={<PrivateRoute roles={['TENANT_ADMIN','BRAND_ADMIN']}><ManageTestimonials /></PrivateRoute>} />
+              <Route path="manage/settings" element={<PrivateRoute roles={['TENANT_ADMIN']}><TenantSettings /></PrivateRoute>} />
             </Route>
           </Routes>
         </BrowserRouter>

@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import api from '../../lib/api'
 import Modal from '../../components/Modal'
 
-const EMPTY = { name: '', slug: '', address: '', phone: '', region: '', check_in_time: '15:00', check_out_time: '11:00' }
+const EMPTY = { name: '', slug: '', address: '', phone: '', region: '', check_in_time: '15:00', check_out_time: '11:00', description: '', is_featured: false }
 const REGIONS = ['北部', '中部', '南部', '東部', '離島']
 
 export default function ManageHotels() {
@@ -103,9 +103,12 @@ export default function ManageHotels() {
                     </div>
                   )}
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${h.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                  {h.is_active ? '啟用' : '停用'}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${h.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                    {h.is_active ? '啟用' : '停用'}
+                  </span>
+                  {h.is_featured && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">精選</span>}
+                </div>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
@@ -250,6 +253,13 @@ function HotelModal({ mode, initial, brands, loading, error, onClose, onSubmit }
         <Field label="旅館執照號碼">
           <input value={form.license_number || ''} onChange={e => set('license_number', e.target.value)} className="input" placeholder="臺北市旅館463號" />
         </Field>
+        <Field label="旅館介紹（選填）">
+          <textarea value={form.description || ''} onChange={e => set('description', e.target.value)} rows={3} className="input" placeholder="2~3 句旅館特色說明..." />
+        </Field>
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input type="checkbox" checked={!!form.is_featured} onChange={e => set('is_featured', e.target.checked)} />
+          在公開網站首頁精選顯示
+        </label>
         <div className="grid grid-cols-2 gap-3">
           <Field label="入住時間">
             <input value={form.check_in_time || ''} onChange={e => set('check_in_time', e.target.value)} className="input" placeholder="15:00" />

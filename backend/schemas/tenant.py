@@ -72,6 +72,8 @@ class HotelCreate(BaseModel):
     region: str = ""
     check_in_time: str = "15:00"
     check_out_time: str = "11:00"
+    description: str = ""
+    is_featured: bool = False
 
 
 class HotelUpdate(BaseModel):
@@ -82,6 +84,8 @@ class HotelUpdate(BaseModel):
     license_number: str = ""
     check_in_time: str = "15:00"
     check_out_time: str = "11:00"
+    description: str = ""
+    is_featured: bool = False
 
 
 class HotelResponse(BaseModel):
@@ -96,6 +100,8 @@ class HotelResponse(BaseModel):
     license_number: str | None = None
     check_in_time: str | None = None
     check_out_time: str | None = None
+    description: str | None = None
+    is_featured: bool = False
     is_active: bool
     images: List[HotelImageResponse] = []
     amenities: List[HotelAmenityResponse] = []
@@ -128,6 +134,25 @@ class TenantTree(BaseModel):
     contact_email: str
     is_active: bool
     brands: list[BrandWithHotels] = []
+    model_config = {"from_attributes": True}
+
+
+class TenantSettingsUpdate(BaseModel):
+    contact_phone: Optional[str] = None
+    social_instagram: Optional[str] = None
+    social_facebook: Optional[str] = None
+    social_line: Optional[str] = None
+
+
+class TenantSettingsResponse(BaseModel):
+    id: int
+    name: str
+    slug: str
+    contact_email: str
+    contact_phone: Optional[str] = None
+    social_instagram: Optional[str] = None
+    social_facebook: Optional[str] = None
+    social_line: Optional[str] = None
     model_config = {"from_attributes": True}
 
 

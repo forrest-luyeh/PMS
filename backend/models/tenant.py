@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -11,6 +11,10 @@ class Tenant(Base):
     name = Column(String, nullable=False)
     slug = Column(String, unique=True, index=True, nullable=False)
     contact_email = Column(String, nullable=False)
+    contact_phone = Column(String, nullable=True)
+    social_instagram = Column(String, nullable=True)
+    social_facebook  = Column(String, nullable=True)
+    social_line      = Column(String, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -47,6 +51,8 @@ class Hotel(Base):
     license_number = Column(String, nullable=True)
     check_in_time  = Column(String, nullable=True)
     check_out_time = Column(String, nullable=True)
+    description    = Column(Text, nullable=True)
+    is_featured    = Column(Boolean, default=False, nullable=False)
 
     brand     = relationship("Brand",        back_populates="hotels")
     tenant    = relationship("Tenant",       back_populates="hotels")

@@ -1,8 +1,14 @@
 import enum
+import secrets
 from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Date, DateTime, Numeric, Text, Enum as SAEnum, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
+
+
+def generate_confirmation_code() -> str:
+    """Generate a 12-char URL-safe confirmation code."""
+    return secrets.token_urlsafe(9)[:12]
 
 
 class ReservationStatus(str, enum.Enum):
@@ -35,6 +41,7 @@ class Reservation(Base):
     status = Column(SAEnum(ReservationStatus), nullable=False, default=ReservationStatus.CONFIRMED)
     source = Column(SAEnum(ReservationSource), nullable=False, default=ReservationSource.DIRECT)
     notes = Column(Text)
+    confirmation_code = Column(String(12), unique=True, index=True, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     guest = relationship("Guest", back_populates="reservations")

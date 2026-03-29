@@ -4,3 +4,6 @@ from .room import RoomType, Room, RoomTypeImage, RoomTypeAmenity
 from .guest import Guest
 from .reservation import Reservation
 from .folio import Folio, FolioItem
+from .post import Post, PostType
+from .testimonial import Testimonial
+from .hero_slide import HeroSlide

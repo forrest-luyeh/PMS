@@ -42,6 +42,16 @@ npm run dev
 
 前端：http://localhost:5910（Vite 自動代理 `/api` → `http://localhost:8910`）
 
+### 公開訂房前端 CheckInn（port 5920）
+
+```bash
+cd frontend-public
+npm install
+npm run dev
+```
+
+公開網站：http://localhost:5920（重構 checkinn.com.tw，原生訂房引擎）
+
 ---
 
 ## 預設帳號
@@ -163,6 +173,20 @@ DEMO_SUITE=04 npm run test:e2e   # 只跑 Suite 04（需雀客集團資料）
 | 02 | `02-full-flow.spec.js` | admin@example.com | 新增客人 → 訂房 → Check-in → 附加消費 → 收款 → Check-out → 房務 → 用戶管理 |
 | 03 | `03-registration-flow.spec.js` | 新帳號（自助註冊） | 旅館自助註冊 → 以新帳號登入 |
 | 04 | `04-dashboard-views.spec.js` | admin@checkinn.com.tw | 多品牌集團總覽 → 單品牌總覽 → 單館今日儀表板 → 切換驗證 → Context Bar |
+
+---
+
+## 公開訂房 API（無需認證）
+
+| 方法 | 路徑 | 說明 |
+|------|------|------|
+| GET | `/api/v1/public/hotels?tenant_slug=checkinn` | 列出旅館（可篩品牌/地區） |
+| GET | `/api/v1/public/hotels/{slug}` | 旅館詳情 + 設施 + 圖片 |
+| GET | `/api/v1/public/hotels/{slug}/room-types` | 房型列表 |
+| GET | `/api/v1/public/hotels/{slug}/availability?check_in=&check_out=` | 各房型可用數量 |
+| POST | `/api/v1/public/bookings` | 建立訂房（回傳 confirmation_code） |
+| GET | `/api/v1/public/bookings/{code}?email=` | 查詢訂房（以確認碼 + email 驗證） |
+| POST | `/api/v1/public/bookings/{code}/cancel` | 自助取消（body: `{email}` 驗證） |
 
 ---
 
